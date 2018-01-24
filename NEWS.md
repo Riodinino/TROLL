@@ -3,7 +3,11 @@
 * automatic integration of Paracou and Guyafor data into virtual forest for simulations
 * sylviculture module in main.cpp
 
-# TROLL 0.1.9029
+# TROLL 0.1.9031
+
+* @Riodinino test and discovery
+
+# TROLL 0.1.9030
 
 * Branch opening
 * Repository cleaning

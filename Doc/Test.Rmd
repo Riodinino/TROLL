@@ -1,0 +1,145 @@
+---
+title: "Test"
+author: "Sylvain"
+date: "24/01/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(RconTroll)
+knitr::opts_chunk$set(echo = T, cache = T)
+```
+
+# Prepration
+
+```{bash}
+tree ~/Documents/TROLL/TROLL
+```
+
+We have only the main right now we need to generate input files with `RconTroll` package.
+
+## Input files
+
+Now we generate inputs
+
+```{r inputs}
+init(path = "~/Documents/TROLL/TROLL/",
+     species = read.table("~/Documents/TROLL/Data/species.txt", header = T, dec = ".", sep = ""))
+```
+
+## Build
+
+```{bash}
+cd ~/Documents/TROLL/TROLL
+g++ -Ofast -o troll main_2.3.1.cpp
+```
+
+```{r build}
+build(src = "~/Documents/TROLL/TROLL/main_2.3.1.cpp",
+      app = "troll",
+      path = "~/Documents/TROLL/TROLL/",
+      optimisation = "-Ofast")
+```
+
+## Output
+
+```{r}
+# # bash
+# cd ~/Documents/TROLL/TROLL
+# mkdir test_single_run
+# mkdir test_multiple_run
+```
+
+# Single Run
+
+## Run
+
+```{r}
+# # bash
+# cd ~/Documents/TROLL/TROLL
+# ./troll -i'input.txt' -o'./test_single_run/test'
+```
+
+## Load
+
+```{r single load}
+single_test <- loadOutput(name = "test",
+           path = "~/Documents/TROLL/TROLL/test_single_run/")
+```
+
+## Plot
+
+```{r single plot}
+plot(single_test, what = "agb", ggplot = T)
+```
+
+## Output
+
+```{r}
+# # bash
+# cd ~/Documents/TROLL/TROLL
+# mkdir test_single_run
+# mkdir test_multiple_run
+```
+
+# Multiple Run
+
+## Run
+
+### Bash
+
+```{r}
+# # bash
+# sh test_multiple_run.sh
+# ./ test_multiple_run.sh
+```
+
+### R2Bash
+
+```{r R2Bash}
+# WD
+path <- "~/Documents/TROLL/TROLL/"
+# Parameters
+cores <- 3 # parallel::detectCores()-1
+n <- 6
+sim <- paste('test', 1:n, sep = "_")
+# Init
+dir.create(file.path(path, 'test_multiple_run'))
+invisible(sapply(sim, function(s) dir.create(file.path(path, 'test_multiple_run/', s))))
+# Bash
+if('test_multiple_run.sh' %in% list.files(path))
+   unlink(file.path(path, 'test_multiple_run.sh'))
+bash <- file(file.path(path, 
+                       'test_multiple_run.sh'), open = 'a')
+cat(' #!/bin/bash  \n\n', file = bash, append = TRUE)
+cat(' echo "multiple run test parrallel model in TROLL" \n\n',
+    file = bash, append = TRUE)
+for(i in seq_len(length(sim))){
+  command <- paste0('./troll',
+                    ' -i"', "input", '.txt"',
+                    ' -o./', "test_multiple_run",
+                    '/', sim[i],
+                    '/', sim[i], ' &\n')
+  cat(command, file = bash, append = TRUE)
+  if(i %/% (cores/2) == i/(cores/2)){
+    cat('wait\n', file = bash, append = TRUE)
+  }
+}
+cat('wait\n', file = bash, append = TRUE)
+cat(' echo "TROLL all jobs done"  \n\n', file = bash, append = TRUE)
+close(bash)
+```
+
+## Load
+
+```{r multiple load}
+multiple_test <- loadStack("~/Documents/TROLL/TROLL/test_multiple_run/")
+```
+
+## Plot
+
+```{r multiple plot}
+plot(multiple_test, what = "agb", plotly = T)
+```
+
+
